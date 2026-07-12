@@ -1,6 +1,19 @@
 # InvestIQ — Institutional AI Equity Research Terminal & Decision Engine
 
+[![Live Frontend Demo](https://img.shields.io/badge/Live%20Demo-InvestIQ%20Frontend-00D8B6?style=for-the-badge&logo=render&logoColor=white)](https://investiq-frontend-ze47.onrender.com)
+[![Live Backend API](https://img.shields.io/badge/API%20Server-InvestIQ%20Backend-4F46E5?style=for-the-badge&logo=render&logoColor=white)](https://investiq-backend-0yw5.onrender.com/api/health)
+
 **InvestIQ** is an autonomous, enterprise-grade AI investment research terminal built on **MERN (MongoDB, Express, React, Node.js)** and **LangGraph.js**. It orchestrates a committee of specialized autonomous AI agents to investigate companies from multiple angles, conduct an adversarial **Bull vs. Bear debate**, and compute an explainable `INVEST / WATCH / PASS` verdict with granular confidence scoring, head-to-head comparisons, and interactive grounded Q&A.
+
+---
+
+## Live Production Deployment
+
+| Service | Live URL | Description |
+| :--- | :--- | :--- |
+| **Frontend Terminal** | [https://investiq-frontend-ze47.onrender.com](https://investiq-frontend-ze47.onrender.com) | Public marketing portal & institutional research command center |
+| **Backend API Service** | [https://investiq-backend-0yw5.onrender.com](https://investiq-backend-0yw5.onrender.com) | LangGraph.js SSE streaming engine & JWT auth service |
+| **API Health Status** | [https://investiq-backend-0yw5.onrender.com/api/health](https://investiq-backend-0yw5.onrender.com/api/health) | Live diagnostics & LLM provider status |
 
 ---
 

@@ -27,7 +27,7 @@ const setAuthCookie = (res, user) => {
   res.cookie('investiq_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
@@ -120,7 +120,7 @@ router.post('/auth/login', authRateLimiter, async (req, res) => {
 router.post('/auth/logout', (req, res) => {
   res.clearCookie('investiq_token', {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     secure: process.env.NODE_ENV === 'production'
   });
   res.status(200).json({ message: 'Successfully signed out.' });
