@@ -1,106 +1,150 @@
-# InvestIQ — Production AI Investment Research Agent (MERN + LangGraph.js)
+# InvestIQ — Institutional AI Equity Research Terminal & Decision Engine
 
-**InvestIQ** is an autonomous, full-stack AI investment research terminal that synthesizes real-time financial fundamentals, market news, competitive landscape, and macro risk data using a **multi-agent LangGraph.js debate pipeline**. 
-
-When a user inputs any company name (e.g. *"Tesla"*, *"Nvidia"*, *"Zomato"*), the backend streams live execution logs via **Server-Sent Events (SSE)** to a trading-terminal-grade React interface. Parallel specialized agents gather data, stage a rigorous **Bull vs. Bear debate**, and compute a quantified `INVEST / WATCH / PASS` decision with interactive radar scorecards and downloadable PDF investment memos.
+**InvestIQ** is an autonomous, enterprise-grade AI investment research terminal built on **MERN (MongoDB, Express, React, Node.js)** and **LangGraph.js**. It orchestrates a committee of specialized autonomous AI agents to investigate companies from multiple angles, conduct an adversarial **Bull vs. Bear debate**, and compute an explainable `INVEST / WATCH / PASS` verdict with granular confidence scoring, head-to-head comparisons, and interactive grounded Q&A.
 
 ---
 
-## Architecture Diagram
+## Key Features & Institutional Differentiators
 
-```
-+-----------------------------------------------------------------------------------------+
-|                              FRONTEND (Vite + React 18 + TS)                            |
-|  Dark SaaS Trading Terminal | Visual LangGraph Flow | Recharts Radar | Live SSE Reader  |
-+-----------------------------------------------------------------------------------------+
-       |                                                                        ^
-       | POST /api/research                                                     | SSE Stream
-       | GET  /api/reports                                                      | (log, partial,
-       | GET  /api/reports/:id/pdf                                              |  final events)
-       v                                                                        |
-+-----------------------------------------------------------------------------------------+
-|                           BACKEND (Node.js + Express + TS + Mongoose)                   |
-|                                                                                         |
-|  +-----------------------------------------------------------------------------------+  |
-|  |                          LangGraph.js State Graph                                 |  |
-|  |                                                                                   |  |
-|  |                             [ 1. routerNode ]                                     |  |
-|  |                   (Resolves company name to ticker/entity)                        |  |
-|  |                                     |                                             |  |
-|  |             +-----------------------+-----------------------+                     |  |
-|  |             |                       |                       |                     |  |
-|  |             v                       v                       v                     |  |
-|  |    [ fundamentalsAgent ]  [ newsSentimentAgent ]  [ competitiveAgent ]            |  |
-|  |    (Financials API Tool)    (Search & Sentiment)     (Peers & Moats)              |  |
-|  |             \                       |                       /                     |  |
-|  |              +----------------------+----------------------+                      |  |
-|  |                                     |                                             |  |
-|  |                                     v                                             |  |
-|  |                             [ 3. debateNode ]                                     |  |
-|  |                (Constructs Strongest Bull vs. Bear Case Debate)                   |  |
-|  |                                     |                                             |  |
-|  |                                     v                                             |  |
-|  |                            [ 4. decisionNode ]                                    |  |
-|  |             (Scores 0-10 Rubric -> INVEST / WATCH / PASS Verdict)                 |  |
-|  |                                     |                                             |  |
-|  |                                     v                                             |  |
-|  |                             [ 5. reportNode ]                                     |  |
-|  +-------------------------------------+---------------------------------------------+  |
-|                                        |                                                |
-|                                        v                                                |
-|                     MongoDB Persisted Reports & Local File Fallback                     |
-+-----------------------------------------------------------------------------------------+
-```
+### 1. Public Marketing Portal & Protected Institutional Terminal
+- **Public Marketing Page (`/`)**: High-converting, static-first institutional landing page explaining the multi-agent committee workflow and sample deliverables without requiring login.
+- **Protected Analyst Command Center (`/dashboard`, `/terminal`)**: Secured via JWT authentication. Signed-in analysts can enter any ticker or company name to trigger live multi-agent evaluations, access their research archive, or launch comparative memos.
+
+### 2. Multi-Agent LangGraph.js ReAct Pipeline (8-Node Graph)
+Unlike single-prompt summarizers that suffer from confirmation bias and hallucination, InvestIQ runs a deterministic **8-node stateful directed graph**:
+1. `routerNode`: Resolves company names to verified stock symbols and SEC EDGAR entity mappings.
+2. `fundamentalsAgent`: Audits 10-K/10-Q metrics, revenue growth, operating margins, and cash flows.
+3. `newsSentimentAgent`: Analyzes live macroeconomic headlines and market sentiment tone.
+4. `competitiveAgent`: Evaluates pricing power, economic moats, and peer dynamics.
+5. `riskAgent`: Audits corporate governance, customer concentration, and macro headwinds.
+6. `debateNode`: Pits a dedicated **Bull Persona** against an opposing **Bear Persona** to argue structured thesis points (`strength: strong | moderate | minor` with explicit `basedOn` source attribution).
+7. `decisionNode`: Weighs both sides against a 4-dimension quantitative rubric (`financialHealth`, `growthPotential`, `marketPosition`, `riskLevel` on 0-10 scales) to issue a definitive `INVEST`, `WATCH`, or `PASS` verdict with honest confidence scoring.
+8. `reportNode`: Compiles the executive memo, generates interactive radar charts, and persists results.
+
+### 3. Head-to-Head Compare Mode (`/compare`)
+- Enter any two companies or stock tickers (e.g., `TSLA` vs `NVDA`) to run concurrent LangGraph pipelines via live Server-Sent Events (SSE).
+- Synthesizes relative valuation, moat durability, and risk profiles to deliver a side-by-side comparative scorecard and definitive capital allocation winner.
+
+### 4. Interactive "Ask InvestIQ" Grounded Chatbot (`/api/reports/:id/chat`)
+- Every completed report features a full conversational chat drawer.
+- Ask complex multi-turn follow-up questions grounded strictly in the gathered report context (no generic hallucinated financial advice).
+
+### 5. Verified Source Citations & PDF Memo Export
+- Every claim in the report is linked to its supporting data source.
+- Export clean, professional two-page PDF investment briefings (`/api/reports/:id/pdf`) ready for investment committee reviews.
+
+### 6. Enterprise Security & Full JWT Authentication
+- **Secure Password Hashing**: Hashed with `bcryptjs` (cost factor 12).
+- **Session Security**: Signed JWT tokens stored in `httpOnly`, `sameSite=lax`, secure cookies (`investiq_token`).
+- **User Scoping**: Reports and comparison memos are automatically tagged with the authenticated user's ID so analysts manage their own private research archive.
+- **API Hardening**: Protects endpoints with `helmet` security headers, `compression`, explicit CORS rules, and `express-rate-limit` (preventing DDoS or credential brute-forcing).
+- **Startup Integrity Check**: Validates required environment variables on launch and fails fast with actionable diagnostics.
 
 ---
 
-## Why This Design: The Multi-Agent Bull / Bear Debate Approach
+## Architecture Flow
 
-Traditional single-prompt AI summarizers suffer from **sycophancy and confirmation bias**—when asked to evaluate a well-known stock, a single prompt tends to regurgitate generic consensus without critically evaluating trade-offs.
-
-InvestIQ solves this via structured **adversarial multi-agent debate**:
-1. **Parallel Domain Specialists (Fan-Out)**: Four independent agents (`fundamentals`, `newsSentiment`, `competitive`, `risk`) run concurrently using function calling to gather factual metrics and citations.
-2. **Adversarial Synthesis (Debate Node)**: One specialized prompt acts as an aggressive **Bull Analyst** tasked with building the strongest possible investment thesis with direct data citations. Another prompt acts as a skeptical **Bear Analyst** poking holes in valuation, margins, or macro vulnerability.
-3. **Impartial Adjudicator (Decision Node)**: A structured output decision agent weighs both cases against a strict 4-dimension scoring rubric (`financialHealth`, `growthPotential`, `marketPosition`, `riskLevel` on 0-10 scales) to issue a definitive `INVEST`, `WATCH`, or `PASS` verdict with a quantifiable confidence score.
+```
++--------------------------------------------------------------------------------------------------+
+|                                    FRONTEND (React 18 + Vite)                                    |
+|  Public Landing Page (/) | Protected Dashboard (/dashboard) | Live SSE Terminal | Compare Mode   |
++--------------------------------------------------------------------------------------------------+
+         |                                                 ^
+         | POST /api/auth/login | POST /api/research       | Server-Sent Events (SSE)
+         | POST /api/compare    | POST /api/reports/:id/chat| Real-time Agent Logs & Partial State
+         v                                                 |
++--------------------------------------------------------------------------------------------------+
+|                            BACKEND (Node.js + Express + Mongoose + JWT)                          |
+|  Security Middleware: Helmet | Rate Limiters | Cookie Parser | requireAuth Route Protection      |
+|                                                                                                  |
+|  +--------------------------------------------------------------------------------------------+  |
+|  |                            LangGraph.js Directed State Graph                               |  |
+|  |                                                                                            |  |
+|  |                                      [ 1. routerNode ]                                     |  |
+|  |                                              |                                             |  |
+|  |           +--------------------+-------------+-------------+--------------------+          |  |
+|  |           |                    |                           |                    |          |  |
+|  |           v                    v                           v                    v          |  |
+|  |  [ fundamentalsAgent ] [ newsSentimentAgent ]     [ competitiveAgent ]     [ riskAgent ]   |  |
+|  |           \                    |                           |                    /          |  |
+|  |            +-------------------+-------------+-------------+-------------------+           |  |
+|  |                                              |                                             |  |
+|  |                                              v                                             |  |
+|  |                                      [ 6. debateNode ]                                     |  |
+|  |                          (Adversarial Bull vs. Bear Case Synthesis)                        |  |
+|  |                                              |                                             |  |
+|  |                                              v                                             |  |
+|  |                                     [ 7. decisionNode ]                                    |  |
+|  |                       (0-10 Rubric -> INVEST / WATCH / PASS + Confidence)                  |  |
+|  |                                              |                                             |  |
+|  |                                              v                                             |  |
+|  |                                      [ 8. reportNode ]                                     |  |
+|  +----------------------------------------------+---------------------------------------------+  |
+|                                                 |                                                |
+|                                                 v                                                |
+|                        MongoDB Persisted Storage + Local Filesystem Fallback                     |
++--------------------------------------------------------------------------------------------------+
+```
 
 ---
 
 ## Quickstart Guide
 
 ### 1. Prerequisites
-- Node.js (v18 or v20+)
-- npm (v9+)
+- **Node.js**: v18 or v20+
+- **npm**: v9+
 
 ### 2. Installation
-Run a single command at the repository root to install all dependencies for both frontend and backend:
+Install dependencies for both frontend and backend from the monorepo root:
 ```bash
 npm install
 ```
 
-### 3. Environment Configuration
-Copy `.env.example` in `/backend` to `/backend/.env`:
+### 3. Environment Setup
+Copy the example environment configuration in `/backend`:
 ```bash
-# In /backend/.env
+cp backend/.env.example backend/.env
+```
+
+Ensure `backend/.env` contains your LLM provider configuration:
+```env
 PORT=5001
 MONGODB_URI=mongodb://localhost:27017/investiq
-LLM_API_KEY=your_api_key_here
-LLM_PROVIDER=gemini # Options: gemini, openai, anthropic
-FMP_API_KEY=optional_fmp_key
-TAVILY_API_KEY=optional_tavily_key
-```
-*(Note: InvestIQ includes intelligent production fallbacks that generate realistic, fact-anchored financial data even if external API keys or MongoDB are absent during local demos).*
+JWT_SECRET=your-secure-jwt-secret-key
 
-### 4. Running Locally
-Start both the API backend and the React frontend concurrently from the project root:
+# LLM Configuration (supports groq, gemini, openai, anthropic)
+LLM_PROVIDER=groq
+LLM_API_KEY=your_llm_api_key_here
+
+FRONTEND_URL=http://localhost:5173
+```
+*(Note: InvestIQ includes intelligent simulation fallbacks if MongoDB or specific financial data APIs are unavailable).*
+
+### 4. Running the Application Locally
+Start both the Express API server and the Vite React development server concurrently from the root directory:
 ```bash
 npm run dev
 ```
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:5001
+
+- **Frontend Application**: [http://localhost:5173](http://localhost:5173)
+- **Backend API Server**: [http://localhost:5001](http://localhost:5001)
 
 ---
 
-## Deployment Notes
+## Using the Terminal
 
-- **Backend (Render / Railway)**: Deploy `/backend` as a persistent Node.js web service (SSE requires persistent open connections). Set environment variables `PORT=5001`, `MONGODB_URI`, and `LLM_API_KEY`.
-- **Frontend (Vercel / Netlify)**: Deploy `/frontend` as a Vite static site. Configure environment variable `VITE_API_URL=https://your-backend-domain.com`.
+1. **Visit the Public Landing Page (`/`)**: Explore the 4-step multi-agent institutional workflow and preview sample reports.
+2. **Register or Sign In (`/signup` or `/signin`)**: Create an institutional analyst account to unlock the terminal.
+3. **Launch Multi-Agent Research (`/dashboard`)**: Type any company name or ticker symbol (e.g., `TSLA`, `NVIDIA`, `Apple`, `Zomato`) to watch the 4 specialist agents investigate filings and debate live via SSE.
+4. **Compare Two Companies (`/compare`)**: Run a head-to-head comparison between two competitors to receive a comparative scorecard and recommendation.
+5. **Ask Grounded Questions**: Open the **Ask InvestIQ** chat drawer on any completed report to ask tailored follow-up questions.
+6. **Export Briefing Memos**: Click **Download PDF Memo** to export a formatted briefing for your committee.
+
+---
+
+## Production Build & Verification
+To verify and compile production bundles across the monorepo:
+```bash
+npm run build
+```
+This builds both the backend server and the production-optimized Vite static bundle in `frontend/dist`.
