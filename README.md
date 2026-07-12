@@ -231,7 +231,21 @@ frontend/src/
 ---
 
 ## 7. Future Improvements & Personal Reflections
-<!-- Personal developer reflections and planned enhancements -->
+
+### What I'd Build Next
+- **Portfolio & Watchlist Tracking**: Enable analysts to save tickers to an active watchlist and track confidence score shifts across repeated research runs over time.
+- **Secondary Financial Data Fallback**: Integrate a second fundamental market data provider (e.g., Alpha Vantage or Polygon.io) to cross-check API responses and eliminate single-provider rate-limit bottlenecks.
+- **Automated Integration & E2E Testing**: Add automated tests for the LangGraph.js execution graph and Server-Sent Events (SSE) streaming flow to catch parsing or timeout regressions early.
+- **Google OAuth Sign-In**: Extend our JWT authentication flow with one-click Google OAuth for faster onboarding.
+- **Adaptive Rate-Limit & Quota Handling**: Implement intelligent queueing and exponential backoff when free-tier LLM provider quotas (such as Gemini's daily tier limits) are approached.
+
+### Personal Build Journey & Debugging Reflections
+What made this build challenging wasn't just connecting to LLM APIs—it was debugging silent failures and making the multi-agent pipeline genuinely trustworthy. Early on, I discovered the pipeline was silently returning hardcoded mock data whenever an API key was missing or a request failed, masking underlying errors; I stripped out every silent fallback so the UI honestly reports when specific data gaps occur. I also ran into real-world integration quirks: troubleshooting deprecated Gemini model IDs (`gemini-1.5-flash`), navigating confusingly similar provider names (xAI's Grok vs. Groq), handling 429 quota exhaustion errors, and hardening our debate/decision nodes against malformed or markdown-wrapped JSON payloads. On the frontend, diagnosing a React 18 `StrictMode` double-render bug that ran our entire research pipeline twice per search—and fixing a hardcoded confidence bug where `INVEST` always defaulted to 80%—taught me the importance of strict state boundaries and ensuring every metric displayed is genuinely grounded in the LLM's analytical synthesis.
+
+---
 
 ## 8. LLM Transcript Instructions
-<!-- Instructions for review of model execution transcripts -->
+
+Full conversation logs and development session transcripts are located in the `/transcripts` directory of this repository.
+- **Contents**: Includes both high-level architecture planning discussions and raw coding-agent execution logs capturing iterative debugging sessions.
+- **What They Show**: The transcripts document our authentic iterative development journey, detailing how we discovered and resolved real production bugs—including stripping out silent fallback data, fixing the React 18 double-pipeline execution bug, and replacing hardcoded verdict confidence scores with genuine per-company LLM evaluation.
