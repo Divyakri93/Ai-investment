@@ -57,6 +57,14 @@ export const graphStateChannels = {
     value: (x, y) => y ?? x ?? '',
     default: () => ''
   },
+  plainSummary: {
+    value: (x, y) => y ?? x ?? '',
+    default: () => ''
+  },
+  watchTriggers: {
+    value: (x, y) => y ?? x ?? [],
+    default: () => []
+  },
   sources: {
     value: (x, y) => (x || []).concat(y || []),
     default: () => []
@@ -214,10 +222,19 @@ export async function debateNode(state) {
 
   const prompt = `Synthesize an adversarial investment debate for ${name} (${ticker}) using only the researched context below.
 If context is missing or degraded, state explicitly what data was unavailable.
-Return strictly valid JSON matching the exact schema below. Do not use markdown code fences. Keep string field values as plain prose WITHOUT literal curly braces or unescaped quotes:
+Return strictly valid JSON matching the exact schema below. Do not use markdown code fences.
+Produce 3 to 5 structured point objects for "bullCase" and 3 to 5 structured point objects for "bearCase".
+Each point MUST be a single crisp sentence.
+"strength" must be one of: "strong", "moderate", "minor".
+"basedOn" must name the source area supporting it (e.g., "Fundamentals", "News Sentiment", "Competitive Position", "Risk Audit").
+
 {
-  "bullCase": "<At least 2 paragraphs arguing BUY/LONG based on researched strengths>",
-  "bearCase": "<At least 2 paragraphs arguing PASS/SHORT based on valuation and risks>"
+  "bullCase": [
+    { "point": "<single crisp sentence arguing BUY/LONG>", "strength": "strong|moderate|minor", "basedOn": "Fundamentals|News Sentiment|Competitive Position|Risk Audit" }
+  ],
+  "bearCase": [
+    { "point": "<single crisp sentence arguing PASS/SHORT>", "strength": "strong|moderate|minor", "basedOn": "Fundamentals|News Sentiment|Competitive Position|Risk Audit" }
+  ]
 }
 
 Researched Context:
@@ -225,20 +242,34 @@ ${contextStr}`;
 
   try {
     const debate = await generateStructuredJson(prompt);
+    const bullPoints = Array.isArray(debate.bullCase) && debate.bullCase.length > 0
+      ? debate.bullCase
+      : [{ point: typeof debate.bullCase === 'string' ? debate.bullCase : 'Strong core business strengths identified in research.', strength: 'moderate', basedOn: 'Fundamentals' }];
+    const bearPoints = Array.isArray(debate.bearCase) && debate.bearCase.length > 0
+      ? debate.bearCase
+      : [{ point: typeof debate.bearCase === 'string' ? debate.bearCase : 'Market volatility and valuation risks identified in research.', strength: 'moderate', basedOn: 'Risk Audit' }];
+
     return {
-      bullCase: debate.bullCase || 'Bull case thesis could not be generated.',
-      bearCase: debate.bearCase || 'Bear case thesis could not be generated.',
-      logs: [`[Debate Committee] Bull Analyst vs. Bear Analyst adversarial thesis synthesized.`]
+      bullCase: bullPoints,
+      bearCase: bearPoints,
+      logs: [`[Debate Committee] Structured Bull vs. Bear adversarial points synthesized (${bullPoints.length} bull points, ${bearPoints.length} bear points).`]
     };
   } catch (err) {
     const errorMsg = err.message || 'Unknown error';
     return {
-      bullCase: 'Debate unavailable — ' + errorMsg,
-      bearCase: 'Debate unavailable — ' + errorMsg,
+      bullCase: [{ point: `Debate synthesis degraded: ${errorMsg}`, strength: 'minor', basedOn: 'Risk Audit' }],
+      bearCase: [{ point: `Debate synthesis degraded: ${errorMsg}`, strength: 'minor', basedOn: 'Risk Audit' }],
       dataGaps: [`Debate synthesis failed: ${errorMsg}`],
       logs: [`⚠️ Debate committee synthesis failed — ${errorMsg}`]
     };
   }
+}
+
+function formatThesisPoints(points) {
+  if (Array.isArray(points)) {
+    return points.map(p => `• [${p.strength?.toUpperCase() || 'MODERATE'} | ${p.basedOn || 'Research'}] ${p.point}`).join('\n');
+  }
+  return String(points || '');
 }
 
 export async function decisionNode(state) {
@@ -255,6 +286,10 @@ IMPORTANT CONFIDENCE SCORING INSTRUCTIONS:
 - Do NOT default to round numbers (like 60, 70, 80, 90) and do not copy example numbers. Calculate an exact, nuanced score based on how complete and reliable the financial, news, competitive, and risk data are for this specific company.
 - Briefly justify the exact confidence percentage in reasoningSummary.
 
+EXECUTIVE SUMMARY & WATCH TRIGGERS INSTRUCTIONS:
+- Generate "plainSummary": Explain this verdict to someone who has never invested before in 2-3 short sentences with NO financial jargon. Explicitly state the single biggest reason FOR investing and the single biggest reason AGAINST investing.
+- Generate "watchTriggers": An array of 2-4 short, highly specific conditions or upcoming milestones that would trigger a reassessment or change this verdict (e.g., "If quarterly revenue misses guidance by more than 5%" or "If major regulatory probe concludes without fine").
+
 Return strictly valid JSON matching the exact schema below. Do not use markdown code fences. Keep string field values as plain prose WITHOUT literal curly braces or unescaped quotes:
 {
   "scores": {
@@ -265,14 +300,19 @@ Return strictly valid JSON matching the exact schema below. Do not use markdown 
   },
   "verdict": "INVEST|WATCH|PASS",
   "confidence": <specific integer between 0-100 reflecting exact evidence completeness and depth>,
-  "reasoningSummary": "<2-sentence executive summary justifying the verdict and exact confidence percentage>"
+  "reasoningSummary": "<2-sentence executive summary justifying the verdict and exact confidence percentage>",
+  "plainSummary": "<2-3 plain-English sentences for a beginner explaining the single biggest reason FOR and AGAINST>",
+  "watchTriggers": [
+    "<specific milestone or event 1 that would change this verdict>",
+    "<specific milestone or event 2 that would change this verdict>"
+  ]
 }
 
 Bull Thesis:
-${state.bullCase}
+${formatThesisPoints(state.bullCase)}
 
 Bear Thesis:
-${state.bearCase}`;
+${formatThesisPoints(state.bearCase)}`;
 
   try {
     const decision = await generateStructuredJson(prompt);
@@ -283,6 +323,10 @@ ${state.bearCase}`;
       verdict: decision.verdict || 'WATCH',
       confidence: rawConfidence,
       reasoningSummary: decision.reasoningSummary || 'Final investment committee assessment completed.',
+      plainSummary: decision.plainSummary || `${name} shows notable business potential balanced against operational and market risks.`,
+      watchTriggers: Array.isArray(decision.watchTriggers) && decision.watchTriggers.length > 0
+        ? decision.watchTriggers
+        : ['Significant quarterly revenue deviation above/below estimates', 'Material regulatory or leadership change'],
       logs: [`[Decision Committee] Final Verdict Issued: ${decision.verdict} (${rawConfidence}% confidence)`]
     };
   } catch (err) {
@@ -291,6 +335,8 @@ ${state.bearCase}`;
       verdict: 'INCOMPLETE',
       confidence: 0,
       reasoningSummary: `Research incomplete: ${errorMsg}. Cannot issue a verified investment verdict without live LLM execution.`,
+      plainSummary: `We could not complete the full analysis due to a data error: ${errorMsg}.`,
+      watchTriggers: ['Successful connection to live AI research models'],
       dataGaps: [`Decision scoring failed: ${errorMsg}`],
       logs: [`⚠️ Research incomplete — Final decision committee could not evaluate (${errorMsg})`]
     };
@@ -331,6 +377,8 @@ export async function reportNode(state) {
     verdict: state.verdict,
     confidence: state.confidence,
     reasoningSummary: state.reasoningSummary,
+    plainSummary: state.plainSummary || '',
+    watchTriggers: state.watchTriggers || [],
     dataGaps: state.dataGaps || [],
     sources: state.sources || []
   };

@@ -1,0 +1,29 @@
+[
+  {
+    "reportId": "local-mrhpk9bx-xar83",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What's the biggest regulatory risk?",
+        "timestamp": "2026-07-12T11:56:46.741Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Per the Institutional Risk Audit, Tesla faces regulatory scrutiny regarding autonomous driving safety.",
+        "timestamp": "2026-07-12T11:56:46.753Z"
+      },
+      {
+        "role": "user",
+        "content": "How does P/E ratio work in general?",
+        "timestamp": "2026-07-12T11:56:46.774Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Beyond what I researched for Tesla: A Price-to-Earnings (P/E) ratio measures a company's share price relative to its earnings per share.",
+        "timestamp": "2026-07-12T11:56:46.796Z"
+      }
+    ],
+    "createdAt": "2026-07-12T11:56:46.734Z",
+    "updatedAt": "2026-07-12T11:56:46.814Z"
+  }
+]

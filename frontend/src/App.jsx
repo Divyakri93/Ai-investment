@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar';
 import { LandingView } from './views/LandingView';
 import { ResearchView } from './views/ResearchView';
 import { HistoryView } from './views/HistoryView';
+import { CompareView } from './views/CompareView';
 
 export const App = () => {
   return (
@@ -14,7 +15,9 @@ export const App = () => {
           <Routes>
             <Route path="/" element={<LandingView />} />
             <Route path="/research/:queryOrId" element={<ResearchView />} />
+            <Route path="/report/:queryOrId/public" element={<ResearchView />} />
             <Route path="/history" element={<HistoryView />} />
+            <Route path="/compare" element={<CompareView />} />
           </Routes>
         </main>
       </div>

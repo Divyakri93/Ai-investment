@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { TrendingUp, Activity, History, Terminal } from 'lucide-react';
+import { TrendingUp, Activity, History, Terminal, GitCompare } from 'lucide-react';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -38,6 +38,18 @@ export const Navbar = () => {
           >
             <Terminal className="w-3.5 h-3.5" />
             <span>TERMINAL</span>
+          </Link>
+
+          <Link
+            to="/compare"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+              location.pathname === '/compare'
+                ? 'bg-slate-800 text-cyan-400 border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <GitCompare className="w-3.5 h-3.5" />
+            <span>COMPARE MODE</span>
           </Link>
 
           <Link

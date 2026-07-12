@@ -100,6 +100,25 @@ export async function generateInvestmentMemoPDF(report) {
 
       doc.moveDown(1.5);
 
+      const formatPointsText = (items) => {
+        if (Array.isArray(items)) {
+          return items.map((p) => `• [${(p.strength || 'moderate').toUpperCase()} | ${p.basedOn || 'Research'}] ${p.point}`).join('\n\n');
+        }
+        return String(items || 'N/A');
+      };
+
+      if (report.plainSummary) {
+        doc
+          .fontSize(14)
+          .fillColor('#0F172A')
+          .text('EXECUTIVE SUMMARY (PLAIN ENGLISH)', { underline: true });
+        doc
+          .fontSize(10)
+          .fillColor('#334155')
+          .text(report.plainSummary, { width: 500 });
+        doc.moveDown(1.5);
+      }
+
       doc
         .fontSize(14)
         .fillColor('#10B981')
@@ -107,7 +126,7 @@ export async function generateInvestmentMemoPDF(report) {
       doc
         .fontSize(10)
         .fillColor('#334155')
-        .text(report.bullCase || 'N/A', { width: 500 });
+        .text(formatPointsText(report.bullCase), { width: 500 });
 
       doc.moveDown(1.5);
 
@@ -118,7 +137,19 @@ export async function generateInvestmentMemoPDF(report) {
       doc
         .fontSize(10)
         .fillColor('#334155')
-        .text(report.bearCase || 'N/A', { width: 500 });
+        .text(formatPointsText(report.bearCase), { width: 500 });
+
+      if (Array.isArray(report.watchTriggers) && report.watchTriggers.length > 0) {
+        doc.moveDown(1.5);
+        doc
+          .fontSize(14)
+          .fillColor('#F59E0B')
+          .text('WHAT WOULD CHANGE THIS VERDICT (WATCH TRIGGERS)', { underline: true });
+        doc
+          .fontSize(10)
+          .fillColor('#334155')
+          .text(report.watchTriggers.map((t) => `• ${t}`).join('\n'), { width: 500 });
+      }
 
       doc.moveDown(1.5);
 

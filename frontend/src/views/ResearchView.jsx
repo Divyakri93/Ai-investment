@@ -16,6 +16,7 @@ import { LiveLogConsole } from '../components/LiveLogConsole';
 import { ScoreRadarChart } from '../components/ScoreRadarChart';
 import { DebatePanels } from '../components/DebatePanels';
 import { SourcesList } from '../components/SourcesList';
+import { AskInvestIQ } from '../components/AskInvestIQ';
 
 export const ResearchView = () => {
   const { queryOrId } = useParams();
@@ -26,6 +27,7 @@ export const ResearchView = () => {
   const [completedNodes, setCompletedNodes] = useState([]);
   const [isStreaming, setIsStreaming] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const hasStarted = useRef(false);
   const lastQueryOrId = useRef(null);
@@ -191,6 +193,15 @@ export const ResearchView = () => {
     }
   };
 
+  const handleCopyShareLink = () => {
+    if (!report) return;
+    const id = report.reportId || report._id;
+    const url = `${window.location.origin}/report/${id}/public`;
+    navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2500);
+  };
+
   const renderVerdictBadge = (verdict) => {
     switch (verdict) {
       case 'INVEST':
@@ -248,6 +259,14 @@ export const ResearchView = () => {
               <span>Download PDF Investment Memo</span>
             </button>
             <button
+              onClick={handleCopyShareLink}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all"
+              title="Copy public link to this report"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>{shareCopied ? 'Link Copied!' : 'Copy Share Link'}</span>
+            </button>
+            <button
               onClick={handleDeleteCurrentReport}
               className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 font-bold text-xs flex items-center gap-1.5 transition-all"
               title="Delete this report"
@@ -300,7 +319,30 @@ export const ResearchView = () => {
       {/* Final Verdict Memo Dashboard */}
       {report && (
         <div className="space-y-8 animate-in fade-in duration-500">
-          {/* Main Verdict Card */}
+          {/* Executive Summary Card (A2 - Plain English So-What) */}
+          <div className="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 via-slate-900/80 to-blue-950/30 shadow-2xl space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
+                    EXECUTIVE SUMMARY (PLAIN ENGLISH)
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                    InvestIQ recommends {report.verdict} on {report.companyName || report.resolvedCompanyName} with {report.confidence}% confidence.
+                  </h2>
+                </div>
+              </div>
+              <div className="shrink-0">{renderVerdictBadge(report.verdict)}</div>
+            </div>
+            <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans bg-slate-950/50 p-4 sm:p-5 rounded-2xl border border-slate-800/80">
+              {report.plainSummary || report.reasoningSummary}
+            </p>
+          </div>
+
+          {/* Main Verdict & Data Completeness Card */}
           <div className="glass-card p-8 rounded-3xl border border-slate-800 space-y-6">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div>
@@ -323,16 +365,56 @@ export const ResearchView = () => {
               </div>
 
               <div className="flex flex-col items-end gap-3 shrink-0">
-                {renderVerdictBadge(report.verdict)}
                 <div className="flex items-center gap-2 text-xs font-mono">
                   <span className="text-slate-400">INSTITUTIONAL CONFIDENCE:</span>
                   <span className="font-bold text-white text-sm">
                     {report.confidence}%
                   </span>
                 </div>
+
+                {/* Data Completeness Visual Meter (B3) */}
+                <div className="flex items-center gap-1.5 text-[10px] font-mono bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                  <span className="text-slate-400 mr-1">DATA INDEX:</span>
+                  {[
+                    { label: 'FIN', active: report.fundamentalsData && Object.keys(report.fundamentalsData).length > 0 && !report.fundamentalsData.error },
+                    { label: 'NEWS', active: report.newsData && Object.keys(report.newsData).length > 0 && !report.newsData.error },
+                    { label: 'CMP', active: report.competitiveData && Object.keys(report.competitiveData).length > 0 && !report.competitiveData.error },
+                    { label: 'RSK', active: report.riskData && Object.keys(report.riskData).length > 0 && !report.riskData.error }
+                  ].map((seg, i) => (
+                    <span
+                      key={i}
+                      title={seg.active ? `${seg.label} verified` : `${seg.label} degraded/unavailable`}
+                      className={`px-1.5 py-0.5 rounded font-bold ${
+                        seg.active
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      }`}
+                    >
+                      {seg.label}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
+
+          {/* What Would Change This Verdict Section (A3) */}
+          {Array.isArray(report.watchTriggers) && report.watchTriggers.length > 0 && (
+            <div className="glass-card p-6 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-950/20 to-transparent space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <span>WHAT WOULD CHANGE THIS VERDICT (KEY WATCH TRIGGERS)</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {report.watchTriggers.map((trigger, idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-slate-900/70 border border-amber-500/20 flex items-start gap-3">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                    <span className="text-xs text-slate-200 leading-relaxed font-sans">{trigger}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Data Gaps Warning Box */}
           {Array.isArray(report.dataGaps) && report.dataGaps.length > 0 && (
@@ -407,6 +489,12 @@ export const ResearchView = () => {
 
           {/* Primary Research Sources List */}
           <SourcesList sources={report.sources} />
+
+          {/* Ask InvestIQ Grounded Multi-Turn Conversational Assistant Panel */}
+          <AskInvestIQ
+            reportId={report.reportId || report._id}
+            companyName={report.companyName || report.resolvedCompanyName}
+          />
         </div>
       )}
     </div>

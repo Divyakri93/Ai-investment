@@ -19,8 +19,10 @@ const ReportSchema = new Schema({
   newsData: { type: Schema.Types.Mixed, default: {} },
   competitiveData: { type: Schema.Types.Mixed, default: {} },
   riskData: { type: Schema.Types.Mixed, default: {} },
-  bullCase: { type: String, required: true },
-  bearCase: { type: String, required: true },
+  bullCase: { type: Schema.Types.Mixed, required: true },
+  bearCase: { type: Schema.Types.Mixed, required: true },
+  plainSummary: { type: String, default: '' },
+  watchTriggers: [{ type: String }],
   scores: {
     financialHealth: { type: ScoreItemSchema, required: false },
     growthPotential: { type: ScoreItemSchema, required: false },
