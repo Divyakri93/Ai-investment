@@ -3,12 +3,13 @@ import { ReportRepository } from '../models/Report.js';
 import { ChatRepository } from '../models/Chat.js';
 import { generateInvestmentMemoPDF } from '../services/pdfService.js';
 import { getModel, withTimeout } from '../ai/model.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = Router();
 
-router.get('/reports', async (req, res) => {
+router.get('/reports', requireAuth, async (req, res) => {
   try {
-    const reports = await ReportRepository.listReports();
+    const reports = await ReportRepository.listReports(req.user.userId);
     res.json(reports);
   } catch (err) {
     console.error('Error listing reports:', err);
@@ -27,6 +28,20 @@ router.get('/reports/:id', async (req, res) => {
   } catch (err) {
     console.error('Error fetching report details:', err);
     res.status(500).json({ error: 'Failed to fetch report' });
+  }
+});
+
+router.get('/report/:id/public', async (req, res) => {
+  try {
+    const report = await ReportRepository.getReportById(String(req.params.id));
+    if (!report) {
+      res.status(404).json({ error: 'Report not found' });
+      return;
+    }
+    res.json(report);
+  } catch (err) {
+    console.error('Error fetching public report details:', err);
+    res.status(500).json({ error: 'Failed to fetch public report' });
   }
 });
 
@@ -195,7 +210,7 @@ router.get('/reports/:id/chat', async (req, res) => {
   }
 });
 
-router.post('/reports/:id/chat', async (req, res) => {
+router.post('/reports/:id/chat', requireAuth, async (req, res) => {
   try {
     const reportId = String(req.params.id);
     const { message } = req.body || {};

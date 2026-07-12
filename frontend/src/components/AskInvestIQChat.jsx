@@ -20,6 +20,7 @@ export const AskInvestIQChat = ({ reportId, companyName }) => {
       const res = await fetch(`${apiUrl}/api/reports/${reportId}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ question: currentQ })
       });
 

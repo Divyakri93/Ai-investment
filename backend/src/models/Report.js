@@ -12,6 +12,7 @@ const ScoreItemSchema = new Schema({
 }, { _id: false });
 
 const ReportSchema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: false, index: true },
   companyName: { type: String, required: true, index: true },
   resolvedTicker: { type: String, required: true, index: true },
   isPubliclyTraded: { type: Boolean, default: true },
@@ -97,11 +98,12 @@ export class ReportRepository {
     };
   }
 
-  static async listReports() {
+  static async listReports(userId = null) {
+    const filter = userId ? { userId } : {};
     const connected = await this.isMongoConnected();
     if (connected) {
       try {
-        const reports = await ReportModel.find().sort({ createdAt: -1 }).limit(50).lean();
+        const reports = await ReportModel.find(filter).sort({ createdAt: -1 }).limit(50).lean();
         return reports;
       } catch (err) {
         console.warn('MongoDB query error, falling back to local file:', err.message);
@@ -110,7 +112,11 @@ export class ReportRepository {
 
     ensureLocalFile();
     const raw = fs.readFileSync(LOCAL_DATA_FILE, 'utf-8');
-    return JSON.parse(raw);
+    const list = JSON.parse(raw);
+    if (userId) {
+      return list.filter((item) => String(item.userId) === String(userId));
+    }
+    return list;
   }
 
   static async getReportById(id) {

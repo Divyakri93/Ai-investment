@@ -9,8 +9,13 @@ import {
   Loader2,
   Share2,
   Activity,
-  Trash2
+  Trash2,
+  RefreshCw,
+  HelpCircle,
+  Bookmark,
+  BookmarkCheck
 } from 'lucide-react';
+import { toggleWatchlist, isInWatchlist } from '../utils/watchlist';
 import { GraphVisualizer } from '../components/GraphVisualizer';
 import { LiveLogConsole } from '../components/LiveLogConsole';
 import { ScoreRadarChart } from '../components/ScoreRadarChart';
@@ -28,6 +33,15 @@ export const ResearchView = () => {
   const [isStreaming, setIsStreaming] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [explainMode, setExplainMode] = useState('beginner');
+  const [chatTriggerPrompt, setChatTriggerPrompt] = useState(null);
+  const [isPinned, setIsPinned] = useState(false);
+
+  useEffect(() => {
+    if (report) {
+      setIsPinned(isInWatchlist(report));
+    }
+  }, [report]);
 
   const hasStarted = useRef(false);
   const lastQueryOrId = useRef(null);
@@ -50,7 +64,7 @@ export const ResearchView = () => {
     setIsStreaming(false);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${apiUrl}/api/reports/${id}`);
+      const res = await fetch(`${apiUrl}/api/reports/${id}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setReport(data);
@@ -73,7 +87,7 @@ export const ResearchView = () => {
     }
   };
 
-  const startLiveResearchStream = async (companyQuery) => {
+  const startLiveResearchStream = async (companyQuery, forceRefresh = false) => {
     setIsStreaming(true);
     setLogs([]);
     setActiveNodes(['routerNode']);
@@ -85,7 +99,8 @@ export const ResearchView = () => {
       const response = await fetch(`${apiUrl}/api/research`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyQuery })
+        credentials: 'include',
+        body: JSON.stringify({ companyQuery, forceRefresh })
       });
 
       if (!response.ok || !response.body) {
@@ -181,7 +196,10 @@ export const ResearchView = () => {
     }
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${apiUrl}/api/reports/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${apiUrl}/api/reports/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
       if (res.ok) {
         navigate('/history');
       } else {
@@ -259,6 +277,38 @@ export const ResearchView = () => {
               <span>Download PDF Investment Memo</span>
             </button>
             <button
+              onClick={() => startLiveResearchStream(report.companyName || report.resolvedTicker || queryOrId, true)}
+              className="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm"
+              title="Force a brand new live AI evaluation bypassing 24h cache"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Force New Evaluation</span>
+            </button>
+            <button
+              onClick={() => {
+                toggleWatchlist(report);
+                setIsPinned(isInWatchlist(report));
+              }}
+              className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all border ${
+                isPinned
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+              }`}
+              title="Pin this memo to your session Watchlist"
+            >
+              {isPinned ? (
+                <>
+                  <BookmarkCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Pinned to Watchlist</span>
+                </>
+              ) : (
+                <>
+                  <Bookmark className="w-4 h-4 text-slate-400" />
+                  <span>Pin to Watchlist</span>
+                </>
+              )}
+            </button>
+            <button
               onClick={handleCopyShareLink}
               className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all"
               title="Copy public link to this report"
@@ -319,7 +369,7 @@ export const ResearchView = () => {
       {/* Final Verdict Memo Dashboard */}
       {report && (
         <div className="space-y-8 animate-in fade-in duration-500">
-          {/* Executive Summary Card (A2 - Plain English So-What) */}
+          {/* Executive Summary Card (Explainability Toggle & Interactive Inquiry) */}
           <div className="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 via-slate-900/80 to-blue-950/30 shadow-2xl space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -327,18 +377,65 @@ export const ResearchView = () => {
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
-                    EXECUTIVE SUMMARY (PLAIN ENGLISH)
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
+                      EXECUTIVE SYNTHESIS
+                    </span>
+                    {/* Explainability Mode Toggle (Differentiator #17) */}
+                    <div className="flex items-center gap-1 bg-slate-900/80 border border-slate-700/80 p-0.5 rounded-lg text-[10px] font-mono">
+                      <button
+                        onClick={() => setExplainMode('beginner')}
+                        className={`px-2 py-0.5 rounded transition-all ${
+                          explainMode === 'beginner'
+                            ? 'bg-cyan-500 text-slate-950 font-extrabold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Beginner (Plain Language)
+                      </button>
+                      <button
+                        onClick={() => setExplainMode('technical')}
+                        className={`px-2 py-0.5 rounded transition-all ${
+                          explainMode === 'technical'
+                            ? 'bg-cyan-500 text-slate-950 font-extrabold'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Institutional Detail
+                      </button>
+                    </div>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
                     InvestIQ recommends {report.verdict} on {report.companyName || report.resolvedCompanyName} with {report.confidence}% confidence.
                   </h2>
                 </div>
               </div>
-              <div className="shrink-0">{renderVerdictBadge(report.verdict)}</div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                {renderVerdictBadge(report.verdict)}
+                {/* One-Click Inquiry Button (Differentiator #18) */}
+                <button
+                  onClick={() => {
+                    setChatTriggerPrompt(
+                      `Why did InvestIQ rate ${report.companyName || report.resolvedTicker} a ${report.verdict} (${report.confidence}% confidence) instead of a stronger alternative? Explain the exact trade-offs.`
+                    );
+                    setTimeout(() => {
+                      document.getElementById('ask-investiq-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/30 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                  title="Ask Ask InvestIQ AI why this verdict was selected"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>Why {report.verdict}?</span>
+                </button>
+              </div>
             </div>
+
             <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans bg-slate-950/50 p-4 sm:p-5 rounded-2xl border border-slate-800/80">
-              {report.plainSummary || report.reasoningSummary}
+              {explainMode === 'beginner'
+                ? report.plainSummary || report.reasoningSummary
+                : report.reasoningSummary || report.plainSummary}
             </p>
           </div>
 
@@ -491,10 +588,14 @@ export const ResearchView = () => {
           <SourcesList sources={report.sources} />
 
           {/* Ask InvestIQ Grounded Multi-Turn Conversational Assistant Panel */}
-          <AskInvestIQ
-            reportId={report.reportId || report._id}
-            companyName={report.companyName || report.resolvedCompanyName}
-          />
+          <div id="ask-investiq-section">
+            <AskInvestIQ
+              reportId={report.reportId || report._id}
+              companyName={report.companyName || report.resolvedCompanyName}
+              triggerPrompt={chatTriggerPrompt}
+              onClearTrigger={() => setChatTriggerPrompt(null)}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -13,7 +13,17 @@ import {
   Clock
 } from 'lucide-react';
 
-export const GraphVisualizer = ({ activeNodes, completedNodes }) => {
+export const GraphVisualizer = ({ activeNodes = [], completedNodes = [] }) => {
+  const activeList = Array.isArray(activeNodes)
+    ? activeNodes
+    : activeNodes
+      ? [activeNodes]
+      : [];
+  const completedList = Array.isArray(completedNodes)
+    ? completedNodes
+    : completedNodes
+      ? [completedNodes]
+      : [];
   const nodes = [
     {
       id: 'routerNode',
@@ -82,8 +92,8 @@ export const GraphVisualizer = ({ activeNodes, completedNodes }) => {
   ];
 
   const getNodeStatus = (id) => {
-    if (completedNodes.includes(id)) return 'completed';
-    if (activeNodes.includes(id)) return 'active';
+    if (completedList.includes(id)) return 'completed';
+    if (activeList.includes(id)) return 'active';
     return 'pending';
   };
 

@@ -27,7 +27,7 @@ export const HistoryView = () => {
     setLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-      const res = await fetch(`${apiUrl}/api/reports`);
+      const res = await fetch(`${apiUrl}/api/reports`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setReports(data);
@@ -47,7 +47,8 @@ export const HistoryView = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       const res = await fetch(`${apiUrl}/api/reports/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
       if (res.ok) {
         setReports((prev) => prev.filter((item) => item._id !== id));
@@ -69,7 +70,8 @@ export const HistoryView = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
       const res = await fetch(`${apiUrl}/api/reports`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
       if (res.ok) {
         setReports([]);

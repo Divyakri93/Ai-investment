@@ -1,0 +1,22 @@
+[
+  {
+    "_id": "user-mrhtnqhn-usw1m",
+    "id": "user-mrhtnqhn-usw1m",
+    "name": "Institutional Analyst",
+    "email": "analyst_1783862473896@fund.com",
+    "passwordHash": "$2b$12$quUpSUHNa0ZcU2ns1eRieeKvpeSo6OdNjJP3y1YX8HtAUOaS5ZHEK",
+    "createdAt": "2026-07-12T13:21:14.457Z",
+    "updatedAt": "2026-07-12T13:21:14.457Z",
+    "lastLoginAt": "2026-07-12T13:21:14.457Z"
+  },
+  {
+    "_id": "user-mrhtomvg-q270b",
+    "id": "user-mrhtomvg-q270b",
+    "name": "Institutional Analyst",
+    "email": "analyst_1783862515835@fund.com",
+    "passwordHash": "$2b$12$RQuSk8a1.CMxbcjs7wgyS.bOYWOzotD2yK0zAbumG5WiZCP0M7D8i",
+    "createdAt": "2026-07-12T13:21:56.427Z",
+    "updatedAt": "2026-07-12T13:21:56.427Z",
+    "lastLoginAt": "2026-07-12T13:21:56.427Z"
+  }
+]

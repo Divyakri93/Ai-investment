@@ -1,0 +1,72 @@
+[
+  {
+    "_id": "local-cmp-ljclreto",
+    "id": "local-cmp-ljclreto",
+    "companyA": "Tesla, Inc.",
+    "companyB": "Tesla, Inc.",
+    "reportAId": "local-mrhpk9bx-xar83",
+    "reportBId": "local-mrhpj65z-a7qrl",
+    "comparisonResult": {
+      "winner": "TOO_CLOSE",
+      "winnerReasoning": "Both companies have comparable risk-adjusted outlooks, with Tesla's strong brand and innovative products offset by regulatory risks and debt concerns.",
+      "categoryComparison": [
+        {
+          "category": "Financial Health",
+          "winner": "TIE",
+          "note": "Both companies have a financial health score of 8/10, indicating a strong financial position."
+        },
+        {
+          "category": "Growth Potential",
+          "winner": "B",
+          "note": "Company B has a higher growth potential score of 9/10, driven by its strong competitive position and growth prospects."
+        },
+        {
+          "category": "Market Position",
+          "winner": "A",
+          "note": "Company A has a stronger market position score of 9/10, driven by its wide moat in battery technology and software integration."
+        },
+        {
+          "category": "Risk Level",
+          "winner": "TIE",
+          "note": "Both companies have a risk level score of 6/10, indicating a moderate level of risk."
+        }
+      ],
+      "investorFitNote": "Investors seeking capital preservation should consider Company A, while those seeking aggressive growth should consider Company B."
+    },
+    "createdAt": "2026-07-12T12:21:20.477Z",
+    "updatedAt": "2026-07-12T12:21:20.477Z"
+  },
+  {
+    "_id": "local-cmp-ioezs3zo",
+    "id": "local-cmp-ioezs3zo",
+    "companyA": "Tesla, Inc.",
+    "companyB": "Tesla, Inc.",
+    "reportAId": "local-mrhpk9bx-xar83",
+    "reportBId": "local-mrhpj65z-a7qrl",
+    "comparisonResult": {
+      "winner": "TOO_CLOSE",
+      "winnerReasoning": "Both companies have strong fundamentals, but Company A has a wider moat in battery technology and software integration, while Company B has higher growth potential.",
+      "comparison": {
+        "Financial Health": {
+          "winner": "TIE",
+          "note": "Both companies have a financial health score of 8/10."
+        },
+        "Growth Potential": {
+          "winner": "B",
+          "note": "Company B has a higher growth potential score of 9/10 compared to Company A's 7/10."
+        },
+        "Market Position": {
+          "winner": "A",
+          "note": "Company A has a stronger market position score of 9/10 compared to Company B's 7/10."
+        },
+        "Risk Level": {
+          "winner": "TIE",
+          "note": "Both companies have a risk level score of 6/10."
+        }
+      },
+      "investorFitNote": "Conservative investors may prefer Company A due to its stronger market position, while aggressive growth investors may prefer Company B due to its higher growth potential."
+    },
+    "createdAt": "2026-07-12T12:20:55.976Z",
+    "updatedAt": "2026-07-12T12:20:55.976Z"
+  }
+]

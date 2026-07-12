@@ -12,7 +12,12 @@ import {
   Globe
 } from 'lucide-react';
 
-export const AskInvestIQ = ({ reportId, companyName = 'this company' }) => {
+export const AskInvestIQ = ({
+  reportId,
+  companyName = 'this company',
+  triggerPrompt,
+  onClearTrigger
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -31,8 +36,16 @@ export const AskInvestIQ = ({ reportId, companyName = 'this company' }) => {
   ];
 
   useEffect(() => {
+    if (triggerPrompt) {
+      setIsOpen(true);
+      setInput(triggerPrompt);
+      if (onClearTrigger) onClearTrigger();
+    }
+  }, [triggerPrompt, onClearTrigger]);
+
+  useEffect(() => {
     if (!reportId) return;
-    fetch(`${apiUrl}/api/reports/${reportId}/chat`)
+    fetch(`${apiUrl}/api/reports/${reportId}/chat`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.messages && Array.isArray(data.messages)) {
@@ -63,6 +76,7 @@ export const AskInvestIQ = ({ reportId, companyName = 'this company' }) => {
       const response = await fetch(`${apiUrl}/api/reports/${reportId}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message: content.trim() })
       });
 

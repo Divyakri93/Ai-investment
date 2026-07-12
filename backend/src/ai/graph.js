@@ -9,6 +9,10 @@ export const graphStateChannels = {
     value: (x, y) => y ?? x ?? '',
     default: () => ''
   },
+  userId: {
+    value: (x, y) => y !== undefined ? y : x,
+    default: () => null
+  },
   resolvedTicker: {
     value: (x, y) => y ?? x ?? '',
     default: () => ''
@@ -364,6 +368,7 @@ export async function reportNode(state) {
   const isPublic = state.fundamentalsData?.isPubliclyTraded !== false && state.isPubliclyTraded !== false;
 
   const reportPayload = {
+    userId: state.userId || null,
     companyName: state.resolvedCompanyName,
     resolvedTicker: state.resolvedTicker,
     isPubliclyTraded: isPublic,
